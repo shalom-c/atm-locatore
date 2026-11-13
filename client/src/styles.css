@@ -50,6 +50,33 @@ select:focus-visible {
   margin-bottom: 26px;
 }
 
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.button-secondary {
+  min-height: 40px;
+  padding: 0 13px;
+  color: var(--color-primary-dark);
+  border-color: #b6d9d8;
+  background: #eff8f7;
+}
+
+.button-secondary:hover {
+  background: #e1f1ef;
+}
+
+.logout-error {
+  max-width: 240px;
+  color: #a53120;
+  font-size: 0.78rem;
+}
+
 .brand-mark {
   display: grid;
   width: 52px;
@@ -377,6 +404,116 @@ h1 {
   clip-path: inset(50%);
 }
 
+.auth-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 32px 16px;
+}
+
+.auth-card {
+  width: min(100%, 520px);
+  padding: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+}
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+  color: var(--color-ink);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.auth-brand .brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  font-size: 1.25rem;
+}
+
+.auth-heading h1 {
+  margin-bottom: 8px;
+}
+
+.auth-heading > p:last-child {
+  margin-bottom: 24px;
+  color: var(--color-muted);
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-field label {
+  color: var(--color-ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.auth-field input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  color: var(--color-ink);
+  background: #fff;
+}
+
+.auth-field input[aria-invalid="true"] {
+  border-color: #b43e2d;
+}
+
+.field-error,
+.form-error {
+  margin: 0;
+  color: #a53120;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.auth-footer {
+  margin-top: 24px;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.auth-footer a {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+}
+
+.auth-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.auth-error {
+  color: #a53120;
+}
+
 @media (max-width: 900px) {
   .app-shell {
     padding: 28px 24px 20px;
@@ -403,6 +540,16 @@ h1 {
 
   .page-header {
     margin-bottom: 20px;
+  }
+
+  .account-actions {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .auth-card {
+    padding: 26px 20px;
   }
 
   .control-bar,

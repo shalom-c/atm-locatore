@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ControlBar from './components/ControlBar.jsx';
 import MapView from './components/MapView.jsx';
 import AtmList from './components/AtmList.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import useGeolocation from './hooks/useGeolocation.js';
 import { fetchNearby } from './api.js';
+import Login from './pages/Login.jsx';
+import Signup from './pages/Signup.jsx';
+import { getAuthErrorMessage } from './lib/auth.js';
 
 const ZURU_CENTRE = { lat: 11.4333, lng: 4.9833 };
 const DEGRADED_STATUSES = new Set([
@@ -14,7 +20,9 @@ const DEGRADED_STATUSES = new Set([
   'unsupported',
 ]);
 
-export default function App() {
+function AtmLocator() {
+  const { profile, logout } = useAuth();
+  const [logoutError, setLogoutError] = useState('');
   const [radius, setRadius] = useState(5);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -30,6 +38,15 @@ export default function App() {
   const { coords, status, error: locationError, request } = useGeolocation();
   const effectiveCoords = coords || manualCoords;
   const isDegraded = DEGRADED_STATUSES.has(status);
+
+  async function handleLogout() {
+    setLogoutError('');
+    try {
+      await logout();
+    } catch (error) {
+      setLogoutError(getAuthErrorMessage(error));
+    }
+  }
 
   useEffect(() => {
     const currentRequestId = ++requestId.current;
@@ -93,6 +110,11 @@ export default function App() {
           <p className="eyebrow">Kebbi State, Nigeria</p>
           <h1>ATM Locator</h1>
           <p className="intro">Find an ATM near you in Zuru.</p>
+        </div>
+        <div className="account-actions">
+          <span>{profile?.displayName || 'Your account'}</span>
+          <button className="button button-secondary" type="button" onClick={handleLogout}>Log out</button>
+          {logoutError && <span className="logout-error" role="alert">{logoutError}</span>}
         </div>
       </header>
 
@@ -172,5 +194,22 @@ export default function App() {
         <span>Confirm ATM availability with the bank before travelling.</span>
       </footer>
     </main>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<AtmLocator />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

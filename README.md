@@ -9,10 +9,24 @@ A client-only React ATM locator for Zuru, Kebbi State. The browser reads ATM rec
 - Firebase CLI for applying Firestore rules and deploying Hosting
 - A service-account key for the seed script
 
+## Environment variables
+
+The map uses Leaflet with OpenStreetMap tiles, so it does not require a map API key. The client Firebase configuration uses these variables in `client/.env`:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+For Render deployments, add these same `VITE_` variables in the service's **Environment** tab. Vite embeds them at build time, so redeploy after adding or changing them.
+
 ## Setup
 
 1. Create a Firebase project and enable Cloud Firestore in **production mode**.
-2. In Firebase project settings, register a web app. Copy its web config into `client/.env` (copy `client/.env.example` and fill in each value):
+2. In Firebase Console, open **Authentication → Sign-in method** and enable the **Email/Password** provider.
+3. In Firebase project settings, register a web app. Copy its web config into `client/.env` (copy `client/.env.example` and fill in each value):
 
    - `VITE_FIREBASE_API_KEY`: web app API key
    - `VITE_FIREBASE_AUTH_DOMAIN`: web app auth domain
@@ -22,22 +36,40 @@ A client-only React ATM locator for Zuru, Kebbi State. The browser reads ATM rec
    - `VITE_FIREBASE_APP_ID`: web app ID
 
    Firebase web configuration is public and is included in the client bundle. Security comes from the Firestore rules, not from hiding these values.
-3. Apply the repository's rules to the project:
+4. Publish the repository's Firestore rules to the project:
 
    ```powershell
    firebase use --add
    firebase deploy --only firestore:rules
    ```
 
-   These rules allow public reads of `atm_centres` and deny all writes from clients.
-4. Install the seed script's service-account key **outside the repository and outside version control**. Never inline the key in code or commit it. The repository `.gitignore` also excludes common service-account key filenames as a safeguard. Set the credential path and project ID in PowerShell, replacing the example paths and ID:
+   The rules in `firestore.rules` are:
+
+   ```text
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /atm_centres/{id} { allow read: if true; allow write: if false; }
+       match /users/{uid} {
+         allow read, update: if request.auth != null && request.auth.uid == uid;
+         allow create: if request.auth != null && request.auth.uid == uid
+           && request.resource.data.nin is string
+           && request.resource.data.nin.matches('^[0-9]{11}$');
+         allow delete: if false;
+       }
+     }
+   }
+   ```
+
+   `users` holds sensitive NIN data and must never be publicly readable; users can only read or update their own UID-keyed document. ATM records remain world-readable and client writes are denied.
+5. Install the seed script's service-account key **outside the repository and outside version control**. Never inline the key in code or commit it. The repository `.gitignore` also excludes common service-account key filenames as a safeguard. Set the credential path and project ID in PowerShell, replacing the example paths and ID:
 
    ```powershell
    $env:GOOGLE_APPLICATION_CREDENTIALS = 'C:\secure\firebase-service-account.json'
    $env:FIREBASE_PROJECT_ID = 'your-project-id'
    ```
 
-5. Seed the twelve example records:
+6. Seed the twelve example records:
 
    ```powershell
    npm install
@@ -46,7 +78,7 @@ A client-only React ATM locator for Zuru, Kebbi State. The browser reads ATM rec
    ```
 
    All sample coordinates in `scripts/seed-data.json` are **SYNTHETIC PLACEHOLDERS**. Replace them with coordinates read from Google Maps before presenting the records as real ATM locations.
-6. Start the client:
+7. Start the client:
 
    ```powershell
    npm run dev
