@@ -514,6 +514,75 @@ h1 {
   color: #a53120;
 }
 
+.auth-loading-shell {
+  width: min(1440px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 34px 40px 22px;
+}
+
+.auth-loading-message {
+  color: var(--color-muted);
+}
+
+.auth-retry-message,
+.auth-session-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  border: 1px solid #e8c5bd;
+  border-radius: 12px;
+  color: #8d2b1d;
+  background: #fff8f6;
+}
+
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(90deg, #e8efed 25%, #f3f6f5 50%, #e8efed 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-account {
+  width: 140px;
+  height: 40px;
+  margin-left: auto;
+}
+
+.skeleton-controls {
+  height: 80px;
+  margin-bottom: 18px;
+}
+
+.skeleton-workspace {
+  display: grid;
+  min-height: 580px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(310px, 0.85fr);
+  gap: 18px;
+}
+
+.skeleton-map,
+.skeleton-results {
+  min-height: 420px;
+}
+
+.map-loading {
+  display: grid;
+  min-height: 580px;
+  place-items: center;
+  color: var(--color-muted);
+  background: #eef3f1;
+}
+
+@keyframes skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 900px) {
   .app-shell {
     padding: 28px 24px 20px;
@@ -521,6 +590,14 @@ h1 {
 
   .workspace {
     grid-template-columns: 1fr;
+  }
+
+  .skeleton-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .skeleton-results {
+    min-height: 240px;
   }
 
   .map-panel,
@@ -540,6 +617,10 @@ h1 {
 
   .page-header {
     margin-bottom: 20px;
+  }
+
+  .auth-loading-shell {
+    padding: 22px 14px 16px;
   }
 
   .account-actions {
@@ -584,5 +665,11 @@ h1 {
   .page-footer {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .auth-retry-message,
+  .auth-session-warning {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

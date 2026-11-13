@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ControlBar from './components/ControlBar.jsx';
-import MapView from './components/MapView.jsx';
 import AtmList from './components/AtmList.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import useGeolocation from './hooks/useGeolocation.js';
-import { fetchNearby } from './api.js';
-import Login from './pages/Login.jsx';
-import Signup from './pages/Signup.jsx';
-import { getAuthErrorMessage } from './lib/auth.js';
+import { getAuthErrorMessage } from './lib/authMessages.js';
+
+const MapView = lazy(() => import('./components/MapView.jsx'));
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Signup = lazy(() => import('./pages/Signup.jsx'));
 
 const ZURU_CENTRE = { lat: 11.4333, lng: 4.9833 };
 const DEGRADED_STATUSES = new Set([
@@ -21,7 +21,14 @@ const DEGRADED_STATUSES = new Set([
 ]);
 
 function AtmLocator() {
-  const { profile, logout } = useAuth();
+  const {
+    user,
+    profile,
+    loading: authLoading,
+    error: authError,
+    retryAuth,
+    logout,
+  } = useAuth();
   const [logoutError, setLogoutError] = useState('');
   const [radius, setRadius] = useState(5);
   const [query, setQuery] = useState('');
@@ -59,7 +66,10 @@ function AtmLocator() {
     setLoading(true);
     setRequestError('');
 
-    fetchNearby({ ...effectiveCoords, radiusKm: radius, query })
+    import('./api.js')
+      .then(({ fetchNearby }) =>
+        fetchNearby({ ...effectiveCoords, radiusKm: radius, query }),
+      )
       .then((data) => {
         if (requestId.current !== currentRequestId) return;
         setResults(data);
@@ -112,11 +122,20 @@ function AtmLocator() {
           <p className="intro">Find an ATM near you in Zuru.</p>
         </div>
         <div className="account-actions">
-          <span>{profile?.displayName || 'Your account'}</span>
-          <button className="button button-secondary" type="button" onClick={handleLogout}>Log out</button>
+          <span>{profile?.displayName || user?.displayName || 'Your account'}</span>
+          <button className="button button-secondary" type="button" onClick={handleLogout} disabled={authLoading}>Log out</button>
           {logoutError && <span className="logout-error" role="alert">{logoutError}</span>}
         </div>
       </header>
+
+      {authError && (
+        <div className="auth-session-warning" role="alert">
+          <span>{authError}</span>
+          <button className="button button-secondary" type="button" onClick={retryAuth}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <ControlBar
         locationStatus={status}
@@ -175,11 +194,13 @@ function AtmLocator() {
 
       <section className="workspace" aria-label="ATM search results">
         <div className="map-panel">
-          <MapView
-            coords={effectiveCoords}
-            results={results}
-            selectedAtmId={selectedAtmId}
-          />
+          <Suspense fallback={<div className="map-loading" role="status">Loading map…</div>}>
+            <MapView
+              coords={effectiveCoords}
+              results={results}
+              selectedAtmId={selectedAtmId}
+            />
+          </Suspense>
         </div>
         <AtmList
           results={results}
@@ -201,14 +222,16 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<AtmLocator />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<main className="auth-page" role="status">Loading page…</main>}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<AtmLocator />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

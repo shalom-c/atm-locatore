@@ -100,3 +100,27 @@ The current query does not filter by status. If a Firestore query later combines
 - Internet connectivity is required to load Firestore results and OpenStreetMap tiles.
 - Location search depends on the user granting browser permission. If permission or GPS is unavailable, enter coordinates manually; the form defaults to the Zuru town centre (`11.4333, 4.9833`).
 - ATM status and verification dates can become stale. Confirm availability with the bank before travelling.
+
+## Performance and hosting
+
+- The frontend is a Vite static site deployed to Firebase Hosting, which serves it through Google's CDN. Vite production builds minify and tree-shake the code; route pages and the Leaflet map are loaded on demand. The map uses no custom image or web-font assets, and the system font stack avoids a font download.
+- Firebase Hosting sends `index.html` with revalidation/no-store headers and keeps fingerprinted `/assets/` files immutable for one year. Hosting provides transport compression for static assets.
+- Firebase Authentication's browser persistence restores the session. The client also caches only the user's UID and display name in local storage so the returning-user shell can appear while Firebase verifies the session. It does not cache ID tokens or the Firestore profile (which contains NIN data). Nearby ATM results are cached in memory for two minutes and matching map search text is filtered locally.
+- The current sign-in and signup flows use email/password; Firebase Auth is initialized without its unused popup/redirect resolver. Add that resolver if an OAuth popup or redirect provider is introduced later.
+- Auth restoration has an eight-second timeout and a retry action. The profile document is fetched once in the background after auth resolves, so it cannot block the app shell.
+- This repository has no Render web service, custom API, or database backend. `/health`, backend compression/CORS, Render region placement, connection pooling, startup migrations, server-side query/index optimization, and Render keep-alive therefore do not apply here. ATM searches query Firestore directly and run geohash-bound reads in parallel; the query uses Firestore's default geohash single-field index. There is no per-result database lookup/N+1 pattern.
+- No Render keep-alive job is configured: the app's static frontend and Firestore do not need a warm Render process. If a separate Render free web service is introduced later, it can sleep when idle and a periodic ping is not a reliable substitute for a paid always-on instance. Keep the static frontend on Firebase Hosting (or another CDN) and place any API/database in a compatible region if that backend is added.
+- There are no external fonts or content images to preload or convert; Leaflet's map tiles are requested only as the map is mounted. The module entry script is a browser module (deferred by default).
+
+### Measuring performance
+
+Lighthouse 13.6 mobile-mode runs were made against local Vite production previews of the pre-change commit and final build, using the same route (`/`, which redirected to `/login`) and Chrome setup. These are local results, not Render production measurements:
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| LCP | 5,075 ms | 905 ms |
+| TTFB | 466 ms | 528 ms |
+| Total Blocking Time | 405 ms | 494 ms |
+| Performance score | 0.68 | 0.87 |
+
+The substantial LCP improvement is consistent with showing the shell before auth resolves. TBT increased by 89 ms and TTFB by 62 ms in this run; local Lighthouse results vary, and the auth SDK still performs background work. Measure the production domain after deployment to capture Render/Firebase network and cold-start behavior.

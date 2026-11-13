@@ -9,6 +9,10 @@ import {
 import { distanceBetween, geohashQueryBounds } from 'geofire-common';
 import { db } from './lib/firebase.js';
 
+const nearbyCache = new Map();
+const CACHE_TTL_MS = 2 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 30;
+
 function validateCoordinate(value, parameter, minimum, maximum) {
   if (value === undefined || value === null || String(value).trim() === '') {
     throw new Error(`Invalid ${parameter}: a numeric value is required.`);
@@ -23,13 +27,15 @@ function validateCoordinate(value, parameter, minimum, maximum) {
   return number;
 }
 
-export async function fetchNearby({ lat, lng, radiusKm, query = '' }) {
-  const latitude = validateCoordinate(lat, 'lat', -90, 90);
-  const longitude = validateCoordinate(lng, 'lng', -180, 180);
-  const radius = validateCoordinate(radiusKm, 'radius', 0.5, 50);
+async function fetchNearbyCandidates(latitude, longitude, radius) {
+  const key = JSON.stringify([latitude, longitude, radius]);
+  const cached = nearbyCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.promise;
+  if (cached) nearbyCache.delete(key);
+
   const center = [latitude, longitude];
   const bounds = geohashQueryBounds(center, radius * 1000);
-  const snapshots = await Promise.all(
+  const promise = Promise.all(
     bounds.map((bound) =>
       getDocs(
         firestoreQuery(
@@ -40,32 +46,48 @@ export async function fetchNearby({ lat, lng, radiusKm, query = '' }) {
         ),
       ),
     ),
-  );
+  )
+    .then((snapshots) =>
+      snapshots
+        .flatMap((snapshot) =>
+          snapshot.docs.map((document) => {
+            const atm = document.data();
+            return {
+              ...atm,
+              id: document.id,
+              distance_km: distanceBetween(center, [atm.latitude, atm.longitude]) / 1000,
+            };
+          }),
+        )
+        .filter((atm) => atm.distance_km <= radius)
+        .sort((first, second) => first.distance_km - second.distance_km),
+    )
+    .catch((error) => {
+      nearbyCache.delete(key);
+      throw error;
+    });
 
-  let results = snapshots.flatMap((snapshot) =>
-    snapshot.docs.map((document) => {
-      const atm = document.data();
-      return {
-        ...atm,
-        id: document.id,
-        distance_km: distanceBetween(center, [atm.latitude, atm.longitude]) / 1000,
-      };
-    }),
-  );
+  nearbyCache.set(key, { expiresAt: Date.now() + CACHE_TTL_MS, promise });
+  if (nearbyCache.size > MAX_CACHE_ENTRIES) {
+    nearbyCache.delete(nearbyCache.keys().next().value);
+  }
+  return promise;
+}
 
-  // Geohash ranges over-return candidates, so filter by exact distance for correctness.
-  results = results
-    .filter((atm) => atm.distance_km <= radius)
-    .sort((first, second) => first.distance_km - second.distance_km);
+export async function fetchNearby({ lat, lng, radiusKm, query = '' }) {
+  const latitude = validateCoordinate(lat, 'lat', -90, 90);
+  const longitude = validateCoordinate(lng, 'lng', -180, 180);
+  const radius = validateCoordinate(radiusKm, 'radius', 0.5, 50);
+  const results = await fetchNearbyCandidates(latitude, longitude, radius);
 
   const searchText = String(query).trim().toLowerCase();
-  if (searchText) {
-    results = results.filter((atm) =>
-      [atm.name, atm.bank, atm.address].some((value) =>
-        String(value).toLowerCase().includes(searchText),
-      ),
-    );
-  }
+  const filteredResults = searchText
+    ? results.filter((atm) =>
+        [atm.name, atm.bank, atm.address].some((value) =>
+          String(value).toLowerCase().includes(searchText),
+        ),
+      )
+    : results;
 
-  return results.slice(0, 20);
+  return filteredResults.slice(0, 20);
 }
