@@ -1,0 +1,122 @@
+[
+  {
+    "name": "UBA Zuru Main Branch ATM",
+    "bank": "UBA",
+    "address": "Main Market Road, Zuru",
+    "latitude": 11.4348,
+    "longitude": 4.9842,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "First Bank Zuru ATM",
+    "bank": "First Bank",
+    "address": "Zuru Central, near Emir's Palace",
+    "latitude": 11.4371,
+    "longitude": 4.981,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "GTBank Zuru ATM",
+    "bank": "GTBank",
+    "address": "Sokoto Road, Zuru",
+    "latitude": 11.4306,
+    "longitude": 4.9871,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "Zenith Bank Zuru ATM",
+    "bank": "Zenith",
+    "address": "Kebbi Road, Zuru",
+    "latitude": 11.439,
+    "longitude": 4.9892,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "Access Bank Zuru ATM",
+    "bank": "Access",
+    "address": "Zuru Bypass, Zuru",
+    "latitude": 11.4268,
+    "longitude": 4.9798,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "Polaris Bank Zuru ATM",
+    "bank": "Polaris",
+    "address": "Main Market Road, Zuru",
+    "latitude": 11.4318,
+    "longitude": 4.9754,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "Unity Bank Zuru ATM",
+    "bank": "Unity",
+    "address": "Zuru Central, near Emir's Palace",
+    "latitude": 11.442,
+    "longitude": 4.978,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "Sterling Bank Zuru ATM",
+    "bank": "Sterling",
+    "address": "Jega Road, Zuru",
+    "latitude": 11.421,
+    "longitude": 4.9867,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "UBA Zuru Market ATM",
+    "bank": "UBA",
+    "address": "New Market Area, Zuru",
+    "latitude": 11.4462,
+    "longitude": 4.9915,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "First Bank Zuru Central ATM",
+    "bank": "First Bank",
+    "address": "Hospital Road, Zuru",
+    "latitude": 11.4175,
+    "longitude": 4.9728,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "Access Bank Zuru East ATM",
+    "bank": "Access",
+    "address": "Eastern Bypass, Zuru",
+    "latitude": 11.4281,
+    "longitude": 5.0021,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  },
+  {
+    "name": "Zenith Bank Zuru West ATM",
+    "bank": "Zenith",
+    "address": "Kebbi Road, near Zuru town centre",
+    "latitude": 11.4356,
+    "longitude": 4.9639,
+    "phone": null,
+    "status": "active",
+    "verified_at": "2025-01-15"
+  }
+]
